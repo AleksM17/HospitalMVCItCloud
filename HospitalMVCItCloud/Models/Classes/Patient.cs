@@ -15,7 +15,6 @@ namespace HospitalMVCItCloud.Models.Classes
     }
     public partial class Patient
     {
-        private string dateNow = DateTime.Now.ToString();
         public int Id { get; set; }
 
         [Required]

@@ -10,7 +10,7 @@ using System.Web.Mvc;
 
 namespace HospitalMVCItCloud.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Moderator, Doctor")]
     public class PatientsController : Controller
     {
         private HospitalContext db = new HospitalContext();
@@ -29,7 +29,7 @@ namespace HospitalMVCItCloud.Controllers
         //        return Json(true, JsonRequestBehavior.AllowGet);
         //    }
         //}
-        [Authorize(Roles = "Admin,Moderator, Doctor")]
+        
         public ActionResult Index(string searchname)
         {
             return View(db.Patients.Where(p => p.Name.ToLower().Contains(searchname.ToLower()) || searchname == null));

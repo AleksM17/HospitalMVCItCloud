@@ -5,6 +5,7 @@ using Microsoft.AspNet.Identity.Owin;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Web;
 using System.Web.Mvc;
 
@@ -14,13 +15,37 @@ namespace HospitalMVCItCloud.Controllers
     public class AdminController : Controller
     {
         ApplicationDbContext context = new ApplicationDbContext();
+       
         public AdminController()
         { }
         
         // GET: Admin
         public ActionResult Index()
         {
-            return View(context.Users);
+            //ViewBag.rolesName = new SelectList(context.Roles.Where(u => !u.Name.Contains("Admin")).ToList(), "Name", "Name");
+            //return View(context.Users);
+
+            var usersWithRoles = (from user in context.Users
+                                  select new
+                                  {
+                                      UserId = user.Id,
+                                      Username = user.UserName,
+                                      Email = user.Email,
+                                      RoleNames = (from userRole in user.Roles
+                                                   join role in context.Roles on userRole.RoleId
+                                                   equals role.Id
+                                                   select role.Name).ToList()
+                                  }).ToList().Select(p => new UserViewModel()
+
+                                  {
+                                      Id = p.UserId,
+                                      Name = p.Username,
+                                      Email = p.Email,
+                                      Role = string.Join(",", p.RoleNames)
+                                  });
+
+
+            return View(usersWithRoles);
         }
 
         [HttpGet]
@@ -36,21 +61,79 @@ namespace HospitalMVCItCloud.Controllers
             if (currentUser == userId)
             {
                 ModelState.AddModelError(string.Empty, "You can't delete yourself");
-                return View("Delete");
+                return Redirect("/Home/Index");
             }
             var user = context.Users.First(u => u.Id == userId);
             context.Users.Remove(user);
             context.SaveChanges();
             return RedirectToAction("Index");
         }
-
-        // GET: /User/Create
-        [Authorize(Roles = "Admin")]
-        public ActionResult Create()
+        public ActionResult Details(string id)
         {
-            return View();
+            if (id==string.Empty)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            ApplicationUserManager userManager = HttpContext.GetOwinContext()
+                                           .GetUserManager<ApplicationUserManager>();
+            var user = context.Users.First(u => u.Id == id);
+            if (user == null)
+            {
+                return HttpNotFound();
+            }
+            ViewBag.rolesName = userManager.GetRoles(user.Id).First();
+
+            return View(user);
+        }
+        // GET: /User/Edit/5
+        public ActionResult Edit(string id)
+        {
+            if (id == string.Empty)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            ApplicationUserManager userManager = HttpContext.GetOwinContext()
+                                           .GetUserManager<ApplicationUserManager>();
+            var user = context.Users.First(u => u.Id == id);
+            if (user.Id == string.Empty)
+                return HttpNotFound();
+            var userViewModel = new UserViewModel
+            {
+                Id = user.Id,
+                Name=user.UserName,
+                Email = user.Email,
+                Role = userManager.GetRoles(user.Id)[0].ToString()
+            };
+
+            return View(userViewModel);
         }
 
-       
+        // POST: Users/Edit/5
+        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Edit(UserViewModel userView)
+        {
+            if (userView == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+
+            if (ModelState.IsValid)
+            {
+                var userUpdate = context.Users.First(u => u.Id == userView.Id);
+                userUpdate.UserName = userView.Name;
+                ApplicationUserManager userManager = HttpContext.GetOwinContext()
+                                           .GetUserManager<ApplicationUserManager>();
+                foreach (var role in context.Roles.ToArray())
+                {
+                    userManager.RemoveFromRole(userUpdate.Id, role.Name);
+                }
+                userManager.AddToRole(userUpdate.Id, userView.Role);
+               
+                context.SaveChanges();
+                return RedirectToAction("Index");
+            }
+            ViewBag.rolesName = new SelectList(context.Roles.Where(u => !u.Name.Contains("Admin")).ToList(), "Name", "Name");
+            return View(userView);
+        }
     }
 }

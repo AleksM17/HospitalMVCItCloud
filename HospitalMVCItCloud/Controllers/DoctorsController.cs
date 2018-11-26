@@ -11,12 +11,13 @@ using System.Web.Mvc;
 
 namespace HospitalMVCItCloud.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin, Moderator")]
     public class DoctorsController : Controller
     {
         private readonly HospitalContext db = new HospitalContext();
- 
+
         // GET: /Doctors/
+        [Authorize(Roles = "Admin, Moderator,Doctor")]
         public ActionResult Index(string searchname)
         {
             var doctors = db.Doctors.Include(j => j.Specialization);
@@ -24,6 +25,7 @@ namespace HospitalMVCItCloud.Controllers
         }
 
         // GET: Doctors/Details/5
+        [Authorize(Roles = "Admin, Moderator,Doctor")]
         public ActionResult Details(int? id)
         {
             if (id == null)
@@ -39,14 +41,12 @@ namespace HospitalMVCItCloud.Controllers
         }
 
         // GET: /Doctor/Create
-        [Authorize(Roles = "Admin, Moderator")]
         public ActionResult Create()
         {
             ViewBag.SpecializationID = new SelectList(db.Specializations, "Id", "Name");
             return View();
         }
        
-        [Authorize(Roles = "Admin, Moderator")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind(Include = "Id,Name,SpecializationId")] Doctor doctor)
@@ -64,7 +64,7 @@ namespace HospitalMVCItCloud.Controllers
 
 
         // GET: /Doctor/Edit/5
-        [Authorize(Roles = "Admin, Moderator", Users ="admin@test.com")]
+        [Authorize(Roles = "Admin, Moderator,Doctor")]
         public ActionResult Edit(int? id)
         {
             if (id == null)
@@ -93,7 +93,7 @@ namespace HospitalMVCItCloud.Controllers
         // POST: Doctors/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [Authorize(Roles = "Admin, Moderator", Users = "admin@test.com")]
+        [Authorize(Roles = "Admin, Moderator,Doctor")]
         [HttpPost]
         [ValidateAntiForgeryToken]//[Bind(Include = "Name,Id,SpecializationID,SelectedPatients")]
         public ActionResult Edit(DoctorViewModel doctorView)
@@ -133,7 +133,6 @@ namespace HospitalMVCItCloud.Controllers
         }
 
         // GET: /Doctor/Delete/5
-        [Authorize(Roles = "Admin", Users = "admin@test.com")]
         public ActionResult Delete(int? id)
         {
             if (id == null)
@@ -153,7 +152,6 @@ namespace HospitalMVCItCloud.Controllers
         }
 
         // POST: Doctors/Delete/5
-        [Authorize(Roles = "Admin", Users = "admin@test.com")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)

@@ -12,6 +12,7 @@ using Microsoft.Owin;
 using Microsoft.Owin.Security;
 using HospitalMVCItCloud.Models;
 
+
 namespace HospitalMVCItCloud
 {
     public class EmailService : IIdentityMessageService
