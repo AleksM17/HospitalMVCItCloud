@@ -1,4 +1,6 @@
-﻿using HospitalMVCItCloud.Models;
+﻿using HospitalMVCItCloud.Dal;
+using HospitalMVCItCloud.Models;
+using HospitalMVCItCloud.Models.Classes;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
@@ -14,6 +16,7 @@ namespace HospitalMVCItCloud.Controllers
     [Authorize(Roles ="Admin")]
     public class AdminController : Controller
     {
+        private HospitalContext db = new HospitalContext();
         ApplicationDbContext context = new ApplicationDbContext();
        
         public AdminController()
@@ -63,6 +66,8 @@ namespace HospitalMVCItCloud.Controllers
                 ModelState.AddModelError(string.Empty, "You can't delete yourself");
                 return Redirect("/Home/Index");
             }
+            //Patient patient = db.Patients.Find(userId);
+            //db.Patients.Remove(patient);
             var user = context.Users.First(u => u.Id == userId);
             context.Users.Remove(user);
             context.SaveChanges();
@@ -123,10 +128,28 @@ namespace HospitalMVCItCloud.Controllers
                 userUpdate.UserName = userView.Name;
                 ApplicationUserManager userManager = HttpContext.GetOwinContext()
                                            .GetUserManager<ApplicationUserManager>();
+                //string origRole = userManager.GetRoles(userView.Id).First().ToString();
                 foreach (var role in context.Roles.ToArray())
                 {
                     userManager.RemoveFromRole(userUpdate.Id, role.Name);
                 }
+                //if (!origRole.ToUpper().Equals(userUpdate.Roles.ToString().ToUpper()))
+                //{
+                //    if (userView.Role.ToString().Equals("Doctor"))
+                //    {
+                //        Doctor newDoc = new Doctor()
+                //        {
+                //            Name = userUpdate.UserName,
+                //        };
+                //    }
+                //    else if (userView.Role.ToString().Equals("Patient"))
+                //    {
+                //        Patient newPatient = new Patient()
+                //        {
+                //            Name = userUpdate.UserName
+                //        };
+                //    }
+                //}
                 userManager.AddToRole(userUpdate.Id, userView.Role);
                
                 context.SaveChanges();

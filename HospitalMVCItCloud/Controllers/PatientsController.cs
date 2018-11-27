@@ -1,7 +1,7 @@
 ﻿using HospitalMVCItCloud.Dal;
+using HospitalMVCItCloud.Models;
 using HospitalMVCItCloud.Models.Classes;
-using System;
-using System.Collections.Generic;
+using Microsoft.AspNet.Identity;
 using System.Data.Entity;
 using System.Linq;
 using System.Net;
@@ -10,10 +10,11 @@ using System.Web.Mvc;
 
 namespace HospitalMVCItCloud.Controllers
 {
-    [Authorize(Roles = "Admin,Moderator, Doctor")]
+    [Authorize]
     public class PatientsController : Controller
     {
         private HospitalContext db = new HospitalContext();
+        ApplicationDbContext context = new ApplicationDbContext();
 
         // GET: Patients
         //public JsonResult CheckDate(DateTime date, int? id)
@@ -29,13 +30,14 @@ namespace HospitalMVCItCloud.Controllers
         //        return Json(true, JsonRequestBehavior.AllowGet);
         //    }
         //}
-        
+        [Authorize(Roles = "Admin,Moderator, Doctor, Patient")]
         public ActionResult Index(string searchname)
         {
             return View(db.Patients.Where(p => p.Name.ToLower().Contains(searchname.ToLower()) || searchname == null));
         }
 
         // GET: Patients/Details/5
+        [Authorize(Roles = "Admin,Moderator, Doctor, Patient")]
         public ActionResult Details(int? id)
         {
             if (id == null)
@@ -43,7 +45,9 @@ namespace HospitalMVCItCloud.Controllers
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
             Patient patient = db.Patients.Find(id);
-            if (patient == null)
+            var stringId = id == null ? string.Empty : id.ToString();
+            string currentUser = User.Identity.GetUserId();
+            if (patient == null || !currentUser.Equals(stringId))
             {
                 return HttpNotFound();
             }
@@ -75,7 +79,7 @@ namespace HospitalMVCItCloud.Controllers
         }
 
         // GET: Patients/Edit/5
-        [Authorize(Roles = "Admin,Moderator, Doctor")]
+        [Authorize(Roles = "Admin, Moderator, Doctor")]
         public ActionResult Edit(int? id)
         {
             if (id == null)

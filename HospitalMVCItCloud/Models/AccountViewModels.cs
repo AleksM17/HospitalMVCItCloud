@@ -65,7 +65,7 @@ namespace HospitalMVCItCloud.Models
     public class RegisterViewModel
     {
         [Display(Name = "UserRoles")]
-        public string UserRoles { get; set; }
+        public string UserRoles { get; set; } = "User";
 
         [Required]
         [EmailAddress]

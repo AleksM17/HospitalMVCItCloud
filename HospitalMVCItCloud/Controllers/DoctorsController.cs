@@ -121,8 +121,8 @@ namespace HospitalMVCItCloud.Controllers
                             docUpdate.Patients.Add((patient));
                         }
                     }
-
-                    db.Entry(docUpdate).State = System.Data.Entity.EntityState.Modified;
+                    
+                    db.Entry(docUpdate).State = EntityState.Modified;
                     db.SaveChanges();
                 }
 
